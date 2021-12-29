@@ -3,7 +3,6 @@ import json
 import logging
 import time
 import keyring
-from getpass import getpass
 
 import click
 import requests
@@ -378,7 +377,8 @@ class Api(object):
         :raises PermissionError: if the token is invalid even after the refresh
         """
         LOGGER.debug("Requesting token for username: {}".format(self.config.USERNAME.value))
-        token_data = self._request_token(self.config.USERNAME.value, getpass(f"Password for user {self.config.USERNAME.value}: "))
+        account_key = self.config.USERNAME.value + ":" + self.config.DEVICE_TOKEN.value
+        token_data = self._request_token(self.config.USERNAME.value, keyring.get_password("n26_password", account_key))
 
         # add expiration time to expiration in _validate_token()
         token_data[EXPIRATION_TIME_KEY] = time.time() + token_data["expires_in"]

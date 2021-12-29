@@ -1,9 +1,9 @@
 import base64
 import json
 import logging
-import os
 import time
-from pathlib import Path
+import keyring
+from getpass import getpass
 
 import click
 import requests
@@ -59,52 +59,21 @@ class Api(object):
 
     @property
     def token_data(self) -> dict:
-        if self.config.LOGIN_DATA_STORE_PATH.value is None:
-            return self._token_data
-        else:
-            return self._read_token_file(self.config.LOGIN_DATA_STORE_PATH.value)
-
-    @token_data.setter
-    def token_data(self, data: dict):
-        if self.config.LOGIN_DATA_STORE_PATH.value is None:
-            self._token_data = data
-        else:
-            self._write_token_file(data, self.config.LOGIN_DATA_STORE_PATH.value)
-
-    @staticmethod
-    def _read_token_file(path: str) -> dict:
         """
         :return: the stored token data or an empty dict
         """
-        LOGGER.debug("Reading token data from {}".format(path))
-        path = Path(path).expanduser().resolve()
-        if not path.exists():
+        LOGGER.debug("Reading token data from keyring")
+        account_key = self.config.USERNAME.value + ":" + self.config.DEVICE_TOKEN.value
+        data_str = keyring.get_password("n26_token", account_key)
+        if data_str is None or data_str == "":
             return {}
+        return json.loads(data_str)
 
-        if not path.is_file():
-            raise IsADirectoryError("File path exists and is not a file: {}".format(path))
-
-        if path.stat().st_size <= 0:
-            # file is empty
-            return {}
-
-        with open(path, "r") as file:
-            return json.loads(file.read())
-
-    @staticmethod
-    def _write_token_file(token_data: dict, path: str):
-        LOGGER.debug("Writing token data to {}".format(path))
-        path = Path(path).expanduser().resolve()
-
-        # delete existing file if permissions don't match or file size is abnormally small
-        if path.exists() and (path.stat().st_mode != 0o100600 or path.stat().st_size < 10):
-            path.unlink()
-
-        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as file:
-            file.seek(0)
-            file.write(json.dumps(token_data, indent=2))
-            file.truncate()
+    @token_data.setter
+    def token_data(self, data: dict):
+        LOGGER.debug("Writing token data to keyring")
+        account_key = self.config.USERNAME.value + ":" + self.config.DEVICE_TOKEN.value
+        keyring.set_password("n26_token", account_key, json.dumps(data))
 
     # IDEA: @get_token decorator
     def get_account_info(self) -> dict:
@@ -409,7 +378,7 @@ class Api(object):
         :raises PermissionError: if the token is invalid even after the refresh
         """
         LOGGER.debug("Requesting token for username: {}".format(self.config.USERNAME.value))
-        token_data = self._request_token(self.config.USERNAME.value, self.config.PASSWORD.value)
+        token_data = self._request_token(self.config.USERNAME.value, getpass(f"Password for user {self.config.USERNAME.value}: "))
 
         # add expiration time to expiration in _validate_token()
         token_data[EXPIRATION_TIME_KEY] = time.time() + token_data["expires_in"]

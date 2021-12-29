@@ -1,5 +1,4 @@
 from container_app_conf import ConfigBase
-from container_app_conf.entry.file import FileConfigEntry
 from container_app_conf.entry.string import StringConfigEntry
 from container_app_conf.source.env_source import EnvSource
 from container_app_conf.source.toml_source import TomlSource
@@ -36,17 +35,6 @@ class Config(ConfigBase):
         required=True
     )
 
-    PASSWORD = StringConfigEntry(
-        description="N26 account password",
-        example="$upersecret",
-        key_path=[
-            NODE_ROOT,
-            "password"
-        ],
-        required=True,
-        secret=True
-    )
-
     DEVICE_TOKEN = StringConfigEntry(
         description="N26 device token",
         example="00000000-0000-0000-0000-000000000000",
@@ -56,17 +44,6 @@ class Config(ConfigBase):
         ],
         required=True,
         regex="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}",
-    )
-
-    LOGIN_DATA_STORE_PATH = FileConfigEntry(
-        description="File path to store login data",
-        example="~/.config/n26/token_data",
-        key_path=[
-            NODE_ROOT,
-            "login_data_store_path"
-        ],
-        required=False,
-        default=None
     )
 
     MFA_TYPE = StringConfigEntry(

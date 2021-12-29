@@ -21,7 +21,7 @@
 [![asciicast](https://asciinema.org/a/260083.svg)](https://asciinema.org/a/260083)
 
 ## About
-[python-n26](https://github.com/femueller/python-n26) is a Python 3.6+ library and Command Line Interface to request information from n26 bank accounts. You can use it to check your balance from the terminal or include it in your own Python projects.
+[python-n26](https://github.com/jacopo-j/python-n26) is a Python 3.6+ library and Command Line Interface to request information from n26 bank accounts. You can use it to check your balance from the terminal or include it in your own Python projects.
 
 **Disclaimer:** This is an unofficial community project which is not affiliated with N26 GmbH/N26 Inc.
 
@@ -29,8 +29,8 @@
 
 ```shell
 pip3 install n26
-wget https://raw.githubusercontent.com/femueller/python-n26/master/n26.yml.example -O ~/.config/n26.yml
-# configure username and password
+wget https://raw.githubusercontent.com/jacopo-j/python-n26/master/n26.yml.example -O ~/.config/n26.yml
+# configure
 vim ~/.config/n26.yml
 ```
 
@@ -41,9 +41,7 @@ You can place a YAML (`n26.yaml` or `n26.yml`) or TOML (`n26.toml` or `n26.tml`)
 If you want to use environment variables:
 
 - `N26_USER`: username
-- `N26_PASSWORD`: password
 - `N26_DEVICE_TOKEN`: random [uuid](https://de.wikipedia.org/wiki/Universally_Unique_Identifier) to identify the device
-- `N26_LOGIN_DATA_STORE_PATH`: optional **file** path to store login data (recommended for cli usage)
 - `N26_MFA_TYPE`: `app` will use the paired app as 2 factor authentication, `sms` will use SMS to the registered number.
 
 Note that **when specifying both** environment variables as well as a config file and a key is present in both locations the **enviroment variable values will be preferred**.
@@ -77,7 +75,7 @@ There are two options here:
 1. Using the paired phone N26 app to approve login on devices that are not paired. This can be configured by setting `app` as the `mfa_type`. You will receive a notification on your phone when you start using this library to request data. python-n26 checks for your login confirmation every 5 seconds. If you fail to approve the login request within 60 seconds an exception is raised.
 2. Using a code delivered via SMS to your registered phone number as 2 factor authentication. This can be configured by setting `sms` as the `mfa_type`.
 
-If you do not specify a `login_data_store_path` this login information is only stored in memory. In order to avoid that every CLI command requires a new confirmation, the login data retrieved in the above process can be stored on the file system. Please note that **this information must be protected** from the eyes of third parties **at all costs**. You can specify the location to store this data in the [Configuration](#Configuration).
+Login data retrieved in the above process is stored in the system keychain.
 
 ## Usage
 
@@ -91,7 +89,7 @@ If you do not specify a `login_data_store_path` this login information is only s
 Or if using environment variables:
 
 ```bash
-> N26_USER=user N26_PASSWORD=passwd N26_DEVICE_TOKEN=00000000-0000-0000-0000-000000000000 N26_MFA_TYPE=app n26 balance
+> N26_USER=user N26_DEVICE_TOKEN=00000000-0000-0000-0000-000000000000 N26_MFA_TYPE=app n26 balance
 123.45 EUR
 ```
 
@@ -141,8 +139,6 @@ from n26.config import Config
 
 conf = Config(validate=False)
 conf.USERNAME.value = "john.doe@example.com"
-conf.PASSWORD.value = "$upersecret"
-conf.LOGIN_DATA_STORE_PATH.value = None
 conf.MFA_TYPE.value = "app"
 conf.validate()
 
@@ -158,7 +154,7 @@ If there are any issues, bugs or missing API endpoints, feel free to contribute 
 Prerequirements: [Pipenv](https://pipenv.readthedocs.io/)
 
 ```shell
-git clone git@github.com:femueller/python-n26.git
+git clone git@github.com:jacopo-j/python-n26.git
 cd python-n26
 pipenv shell
 pipenv install

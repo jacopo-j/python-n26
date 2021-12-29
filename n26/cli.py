@@ -1,6 +1,7 @@
 import functools
 import logging
 import webbrowser
+import keyring
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
@@ -67,10 +68,10 @@ def cli(json: bool):
 def logout():
     """ Logout """
     cfg = Config()
-    login_data_file = cfg.LOGIN_DATA_STORE_PATH.value
-    if login_data_file is not None:
-        login_data_file = login_data_file.expanduser().resolve()
-        login_data_file.unlink(missing_ok=True)
+    account_key = cfg.USERNAME.value + ":" + cfg.DEVICE_TOKEN.value
+    check = keyring.get_password("n26_token", account_key)
+    if check is not None:
+        keyring.delete_password("n26_token", account_key)
 
 
 @cli.command()
